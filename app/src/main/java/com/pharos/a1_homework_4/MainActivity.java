@@ -9,38 +9,24 @@ import androidx.recyclerview.widget.RecyclerView;
 
 import android.content.Intent;
 import android.os.Bundle;
-import android.view.View;
 
 import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Collections;
 import java.util.List;
 
-import static com.pharos.a1_homework_4.ActivityTwo.TEXT_KEY;
+public class MainActivity extends AppCompatActivity implements MainAdapter.ItemClickListener {
 
-public class MainActivity extends AppCompatActivity {
-
-    public static final int REQUEST_CODE = 1;
-
+    public static final String KEY = "key" ;
     public RecyclerView recyclerView;
     private MainAdapter adapter;
-    public List<String> list;
-
+    public List<Title> list;
+    public static int REQUEST_CODE = 1;
+    int position;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
         init();
-        checkIntent();
-    }
-
-    private void checkIntent() {
-        Intent dataFromSecAct = getIntent();
-        String getText = dataFromSecAct.getStringExtra(TEXT_KEY);
-        list.add(getText);
-
-
     }
 
     private void init() {
@@ -48,43 +34,44 @@ public class MainActivity extends AppCompatActivity {
         recyclerView.setLayoutManager(new LinearLayoutManager(this));
         list = new ArrayList<>();
         for (int i = 0; i < 30; i++) {
-            list.add("Item " + i + "  - Меняй");
-
-
+            list.add(new Title("Item " + i + " Список заметок"));
         }
 
 
         adapter = new MainAdapter(list, this);
         recyclerView.setAdapter(adapter);
+        adapter.setOnClick(this);
         new ItemTouchHelper(simpleCallback).attachToRecyclerView(recyclerView);
-
     }
-
 
     ItemTouchHelper.SimpleCallback simpleCallback = new ItemTouchHelper.SimpleCallback
             (ItemTouchHelper.UP | ItemTouchHelper.DOWN, ItemTouchHelper.RIGHT |
                     ItemTouchHelper.LEFT) {
-
-
         @Override
-        public boolean onMove(@NonNull RecyclerView recyclerView,
-                              @NonNull RecyclerView.ViewHolder viewHolder,
-                              @NonNull RecyclerView.ViewHolder target) {
-            int positionDrag = viewHolder.getAdapterPosition();
-            int positionTarget = target.getAdapterPosition();
-            Collections.swap(adapter.list, positionDrag, positionTarget);
-            adapter.notifyItemMoved(positionDrag, positionTarget);
-            return true;
-
-
+        public boolean onMove(@NonNull RecyclerView recyclerView, @NonNull RecyclerView.ViewHolder viewHolder, @NonNull RecyclerView.ViewHolder target) {
+            return false;
         }
 
         @Override
         public void onSwiped(@NonNull RecyclerView.ViewHolder viewHolder, int direction) {
-            adapter.list.remove(viewHolder.getAdapterPosition());
-            adapter.notifyItemRemoved(viewHolder.getAdapterPosition());
-            Intent intent = new Intent(MainActivity.this, ActivityTwo.class);
-            startActivity(intent);
+
         }
     };
+
+    @Override
+    public void onItemClick(Title title, int pos) {
+        this.position = pos;
+        Intent intent = new Intent(this,ActivityTwo.class);
+        intent.putExtra(KEY, title);
+        startActivityForResult(intent, REQUEST_CODE);
+    }
+
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+        if (requestCode == REQUEST_CODE && resultCode == RESULT_OK){
+            Title title = (Title) data.getSerializableExtra(ActivityTwo.KEY2);
+            adapter.setElement(title, position);
+        }
+    }
 }
